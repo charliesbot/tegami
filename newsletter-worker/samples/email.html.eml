@@ -1,0 +1,84 @@
+From: "Coffee Chronicle" <newsletter@coffeechronicle.com>
+To: charliesbot@tegami.dev
+Subject: Your Weekly Brew - Ethiopian Yirgacheffe & Cold-Brew Tips
+Message-ID: <20250621-01@coffeechronicle.com>
+Date: Sat, 21 Jun 2025 18:30:00 +0000
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============1456110903749317316=="
+
+--===============1456110903749317316==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+👋 Hey there coffee lover!
+
+This week we:
+• revisit Ethiopian Yirgacheffe (bright, floral, blueberry notes)
+• share our 3-step cold-brew recipe (spoil-free at 6 h steep!)
+• link two reads from the community
+
+Read the full story:
+https://coffeechronicle.com/2025/06/yirgacheffe-coldbrew
+
+Happy brewing,
+— The Coffee Chronicle Team
+
+P.S. Unsubscribe: https://coffeechronicle.com/unsub?u=3&list=weekly
+
+--===============1456110903749317316==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Your Weekly Brew</title>
+    <style>
+      body { font-family: sans-serif; line-height:1.5; margin:0; padding:0; }
+      .hero { width:100%; max-width:600px; display:block; margin:0 auto; }
+      .cta  { background:#c2682b; color:#fff; text-decoration:none;
+              padding:12px 24px; border-radius:4px; display:inline-block; }
+      .footer { font-size:12px; color:#777; margin-top:32px; }
+    </style>
+  </head>
+  <body>
+    <img class="hero"
+         src="https://images.coffeechronicle.com/2025/06/yirgacheffe.jpg"
+         alt="Pour-over brew with Ethiopian beans" />
+
+    <h1 style="text-align:center">Your Weekly Brew</h1>
+
+    <p>Hi <strong>friend</strong> — ready to tweak your brew?<br/>
+       This week we revisit <em>Ethiopian&nbsp;Yirgacheffe</em> and reveal our
+       easiest <strong>3-step cold-brew&nbsp;method</strong>.</p>
+
+    <h2>Flavor snapshot</h2>
+    <ul>
+      <li>Origin&nbsp;notes: floral, blueberry, jasmine</li>
+      <li>Roast&nbsp;level: light-medium</li>
+      <li>Ideal ratio: 1&nbsp;g coffee&nbsp;:&nbsp;16&nbsp;g water</li>
+    </ul>
+
+    <p style="text-align:center">
+      <a class="cta"
+         href="https://coffeechronicle.com/2025/06/yirgacheffe-coldbrew">
+         Read the full recipe
+      </a>
+    </p>
+
+    <div class="footer">
+      <p>You’re receiving this because you subscribed to Coffee Chronicle Weekly.</p>
+      <p><a href="https://coffeechronicle.com/unsub?u=3&amp;list=weekly">
+         Unsubscribe
+      </a></p>
+    </div>
+
+    <!-- tiny tracking pixel for sanitizer tests -->
+    <img src="https://trk.coffeechronicle.com/open.gif?msgId=20250621-01"
+         width="1" height="1" alt="" style="display:none" />
+  </body>
+</html>
+
+--===============1456110903749317316==--

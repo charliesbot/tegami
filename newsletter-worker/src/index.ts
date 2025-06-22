@@ -13,28 +13,14 @@
 
 import PostalMime from 'postal-mime';
 import { sha256 } from './helpers/sha256';
-
-interface Env {
-	// D1 Database binding
-	DB: D1Database;
-	// R2 Bucket for storing raw, unprocessed emails
-	RAW_MAIL_BUCKET: R2Bucket;
-	// R2 Bucket for storing the processed, deduplicated HTML content
-	ARTICLES: R2Bucket;
-
-	// The base URL of your worker, used to call itself for background processing.
-	// e.g., "https://tegami-worker.your-account.workers.dev"
-	API_URL: string;
-	// A secret string to prevent the public from calling your internal processing endpoint.
-	WORKER_SECRET: string;
-}
+import { parseEmailAddress } from './helpers/parseEmailAddress';
 
 type RequestFields = { userId: string; r2Key: string };
 
 export default (<ExportedHandler<Env>>{
 	async email(message, env: Env, ctx: ExecutionContext) {
-		const mailTo = message.to;
-		const user = await env.DB.prepare('SELECT id FROM users WHERE alias = ?').bind(mailTo).first();
+		const { base } = parseEmailAddress(message.to);
+		const user = await env.DB.prepare('SELECT id FROM users WHERE alias = ?').bind(base).first();
 		if (!user) {
 			message.setReject('Unknown address');
 			return;
@@ -43,8 +29,9 @@ export default (<ExportedHandler<Env>>{
 		await env.RAW_MAIL_BUCKET.put(key, message.raw);
 
 		// 2. fire-and-forget background call  (30-second timeout; no retries)
+		const ingestUrl = new URL('/ingest', 'http://localhost:8787');
 		ctx.waitUntil(
-			fetch(`${env.API_URL}/ingest`, {
+			fetch(ingestUrl, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -99,8 +86,10 @@ export default (<ExportedHandler<Env>>{
 			return new Response('ok');
 		}
 
-		/* any other tiny test routes you like */
-		if (url.pathname === '/random') return new Response(crypto.randomUUID());
+		if (url.pathname === '/random') {
+			return new Response(crypto.randomUUID());
+		}
+
 		return new Response('Not Found', { status: 404 });
 	},
 }) satisfies ExportedHandler<Env>;

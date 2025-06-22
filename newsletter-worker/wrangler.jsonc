@@ -24,19 +24,23 @@
 			"binding": "DB",
 			"database_name": "tegami-db",
 			"database_id": "e4896fa6-03e0-4b55-bece-1b105af0d56d",
-			"preview_database_id": "05b01a86-3199-4418-9708-95e02d4f8fd2"
+			"preview_database_id": "05b01a86-3199-4418-9708-95e02d4f8fd2",
+			"experimental_remote": true
 		}
 	],
 
 	"r2_buckets": [
-		{ "binding": "RAW_MAIL_BUCKET", "bucket_name": "tegami-raw", "preview_bucket_name": "tegami-raw-preview" }, // raw .eml
-		{ "binding": "ARTICLES", "bucket_name": "tegami-articles", "preview_bucket_name": "tegami-articles-preview" } // cleaned html
+		{ "binding": "RAW_MAIL_BUCKET", "bucket_name": "tegami-raw", "preview_bucket_name": "tegami-raw-preview", "experimental_remote": true }, // raw .eml
+		{
+			"binding": "ARTICLES",
+			"bucket_name": "tegami-articles",
+			"preview_bucket_name": "tegami-articles-preview",
+			"experimental_remote": true
+		} // cleaned html
 	],
 
 	/* simple constants available as env.VARS.* */
-	"vars": {
-		"API_URL": "https://api.tegami.dev" // only used if you keep the webhook pattern
-	}
+	"vars": {}
 
 	/**
 	 * Smart Placement
