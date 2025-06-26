@@ -14,6 +14,7 @@
 import PostalMime from 'postal-mime';
 import { sha256 } from './helpers/sha256';
 import { parseEmailAddress } from './helpers/parseEmailAddress';
+import { withAuth, AuthenticatedUser } from './helpers/auth';
 
 type RequestFields = { userId: string; r2Key: string };
 
@@ -84,6 +85,96 @@ export default (<ExportedHandler<Env>>{
 				.run();
 
 			return new Response('ok');
+		}
+
+		// Protected endpoints that require authentication
+		if (url.pathname === '/user' && request.method === 'GET') {
+			return withAuth(async (request: Request, env: Env, ctx: ExecutionContext, user: AuthenticatedUser) => {
+				// Get user details from database
+				const dbUser = await env.DB.prepare(
+					`
+					SELECT id, alias, created_at 
+					FROM users 
+					WHERE id = ?
+				`
+				)
+					.bind(user.id)
+					.first();
+
+				if (!dbUser) {
+					return new Response(JSON.stringify({ error: 'User not found in database' }), {
+						status: 404,
+						headers: { 'Content-Type': 'application/json' },
+					});
+				}
+
+				return new Response(
+					JSON.stringify({
+						id: dbUser.id,
+						alias: dbUser.alias,
+						email: user.email,
+						name: user.name,
+						groups: user.groups,
+						created_at: dbUser.created_at,
+					}),
+					{
+						headers: { 'Content-Type': 'application/json' },
+					}
+				);
+			})(request, env, ctx);
+		}
+
+		if (url.pathname === '/inbox' && request.method === 'GET') {
+			return withAuth(async (request: Request, env: Env, ctx: ExecutionContext, user: AuthenticatedUser) => {
+				const url = new URL(request.url);
+				const limit = parseInt(url.searchParams.get('limit') || '50');
+				const offset = parseInt(url.searchParams.get('offset') || '0');
+
+				// Get user's inbox items with pagination
+				const inboxItems = await env.DB.prepare(
+					`
+					SELECT 
+						i.id,
+						i.received_at,
+						a.id as article_id,
+						a.subject,
+						a.sender,
+						a.content_hash
+					FROM inbox i
+					JOIN articles a ON i.article_id = a.id
+					WHERE i.user_id = ?
+					ORDER BY i.received_at DESC
+					LIMIT ? OFFSET ?
+				`
+				)
+					.bind(user.id, limit, offset)
+					.all();
+
+				// Get total count for pagination
+				const totalCount = await env.DB.prepare(
+					`
+					SELECT COUNT(*) as count
+					FROM inbox i
+					WHERE i.user_id = ?
+				`
+				)
+					.bind(user.id)
+					.first();
+
+				return new Response(
+					JSON.stringify({
+						items: inboxItems.results,
+						pagination: {
+							limit,
+							offset,
+							total: totalCount?.count || 0,
+						},
+					}),
+					{
+						headers: { 'Content-Type': 'application/json' },
+					}
+				);
+			})(request, env, ctx);
 		}
 
 		if (url.pathname === '/random') {
