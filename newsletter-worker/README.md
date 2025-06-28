@@ -1,182 +1,40 @@
 # Newsletter Worker
 
-A Cloudflare Worker that processes email newsletters and provides protected API endpoints for user management and inbox access.
+This directory contains the Cloudflare Worker that serves as the backend for the Tegami project. It has two primary responsibilities:
 
-## Features
+1.  **Email Ingestion:** It acts as a target for Cloudflare Email Routing, receiving emails sent to a specific address, processing them, and storing them as articles.
+2.  **API Server:** It exposes a JSON API for the web, iOS, and Android clients to consume.
 
-- Email processing and storage
-- Cloudflare Access authentication
-- Protected API endpoints for user data and inbox
-- R2 storage for email content
-- D1 database for metadata
+## Architecture
 
-## Setup
+The worker is built using a modern, modular approach suitable for Cloudflare Workers.
 
-### 1. Install Dependencies
+*   **Multi-Handler Entrypoint:** The main entry point (`src/index.ts`) uses a multi-handler approach. It contains an `email` handler for processing incoming emails and a `fetch` handler for serving API requests. This allows a single worker to handle multiple types of events.
+*   **Router-based API:** The `fetch` handler acts as a simple router, delegating incoming API requests to the appropriate handler function based on the request's URL and method.
+*   **Modular Routes:** All API logic is organized into separate files within the `src/routes/` directory. This keeps the codebase clean, maintainable, and easy to extend. For example, all logic related to articles is contained in `src/routes/articles.ts`.
 
-```bash
-npm install
-```
-
-### 2. Cloudflare Access Configuration
-
-To enable authentication, you need to set up Cloudflare Access and configure the following environment variables:
-
-#### Set up Cloudflare Access
-
-1. Go to your Cloudflare dashboard
-2. Navigate to Access > Applications
-3. Create a new application for your API
-4. Configure the application settings:
-   - **Application type**: Self-hosted
-   - **Session duration**: Choose appropriate duration
-   - **Application domain**: Your API domain
-   - **Policy**: Configure who can access the application
-
-#### Configure Environment Variables
-
-Set the following secrets using Wrangler:
-
-```bash
-# Set the public key for JWT verification
-wrangler secret put CF_ACCESS_PUBLIC_KEY
-
-# Set the issuer (your Cloudflare Access team domain)
-wrangler secret put CF_ACCESS_ISSUER
-
-# Set the audience (your application's audience)
-wrangler secret put CF_ACCESS_AUDIENCE
-```
-
-The values should be:
-
-- `CF_ACCESS_PUBLIC_KEY`: Your Cloudflare Access public key (found in Access > Service Auth)
-- `CF_ACCESS_ISSUER`: Your team domain (e.g., `https://your-team.cloudflareaccess.com`)
-- `CF_ACCESS_AUDIENCE`: Your application's audience identifier
-
-### 3. Development
-
-```bash
-# Start development server
-npm run dev
-
-# Deploy to production
-npm run deploy
-```
+This architecture allows for a clean separation of concerns while keeping all backend logic within a single, scalable Cloudflare Worker.
 
 ## API Endpoints
 
-### Protected Endpoints (Require Authentication)
+The worker exposes the following API endpoints. The API is designed with a clear distinction between public content and private, user-specific data.
 
-All protected endpoints require a valid Cloudflare Access JWT token in the Authorization header:
+### Public Endpoints
 
-```
-Authorization: Bearer <jwt_token>
-```
+These endpoints are public and do not require authentication. They are intended to provide public content that can be displayed to all users, helping to attract new subscribers.
 
-#### GET /user
+*   `GET /api/articles`: Returns a paginated list of all articles.
+    *   Query Parameters: `limit` (default: 50), `offset` (default: 0)
+*   `GET /api/articles/:id`: Returns the full HTML content of a single article.
 
-Returns the authenticated user's information.
+### Private Endpoints
 
-**Response:**
+These endpoints require authentication and will only return data for the currently logged-in user. The `withAuth` helper middleware handles the authentication flow, ensuring user data remains secure.
 
-```json
-{
-	"id": "user-uuid",
-	"alias": "user-alias",
-	"email": "user@example.com",
-	"name": "User Name",
-	"groups": ["group1", "group2"],
-	"created_at": "2024-01-01T00:00:00Z"
-}
-```
-
-#### GET /inbox
-
-Returns the authenticated user's inbox items with pagination.
-
-**Query Parameters:**
-
-- `limit` (optional): Number of items per page (default: 50)
-- `offset` (optional): Number of items to skip (default: 0)
-
-**Response:**
-
-```json
-{
-	"items": [
-		{
-			"id": "inbox-uuid",
-			"received_at": "2024-01-01T00:00:00Z",
-			"article_id": "article-uuid",
-			"subject": "Newsletter Subject",
-			"sender": "sender@example.com",
-			"content_hash": "sha256-hash"
-		}
-	],
-	"pagination": {
-		"limit": 50,
-		"offset": 0,
-		"total": 100
-	}
-}
-```
+*   `GET /api/user`: Returns the profile information for the authenticated user.
+*   `GET /api/inbox`: Returns a paginated list of articles in the authenticated user's inbox.
+    *   Query Parameters: `limit` (default: 50), `offset` (default: 0)
 
 ### Internal Endpoints
 
-#### POST /ingest
-
-Internal endpoint for processing incoming emails (requires `X-Worker-Secret` header).
-
-#### GET /random
-
-Returns a random UUID (for testing purposes).
-
-## Authentication Flow
-
-1. Users authenticate through Cloudflare Access
-2. Cloudflare Access provides a JWT token
-3. The JWT token is included in API requests as a Bearer token
-4. The worker verifies the JWT token using the configured public key
-5. If valid, the request is processed; otherwise, a 401 error is returned
-
-## Error Responses
-
-All endpoints return JSON error responses with appropriate HTTP status codes:
-
-```json
-{
-	"error": "Error message description"
-}
-```
-
-Common status codes:
-
-- `401 Unauthorized`: Invalid or missing authentication token
-- `404 Not Found`: Resource not found
-- `403 Forbidden`: Access denied (for internal endpoints)
-
-## Database Schema
-
-The worker expects the following database tables:
-
-### users
-
-- `id` (UUID): Primary key
-- `alias` (TEXT): User's email alias
-- `created_at` (DATETIME): Account creation timestamp
-
-### articles
-
-- `id` (UUID): Primary key
-- `content_hash` (TEXT): SHA256 hash of article content
-- `r2_object_key` (TEXT): R2 storage key for article content
-- `subject` (TEXT): Email subject
-- `sender` (TEXT): Sender email address
-
-### inbox
-
-- `id` (UUID): Primary key
-- `user_id` (UUID): Foreign key to users table
-- `article_id` (UUID): Foreign key to articles table
-- `received_at` (DATETIME): When the email was received
+*   `POST /api/ingest`: This is an internal endpoint used by the `email` handler to process and store new articles. It is secured with a worker secret.
