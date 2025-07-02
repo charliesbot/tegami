@@ -2,6 +2,7 @@ import { ingestHandler } from './routes/ingest';
 import { parseEmailAddress } from './helpers/parseEmailAddress';
 import { withAuth } from './helpers/auth';
 import { userHandler } from './routes/user';
+import { meHandler } from './routes/me';
 import { inboxHandler } from './routes/inbox';
 import { articlesHandler, articleHandler } from './routes/articles';
 
@@ -45,6 +46,10 @@ export default (<ExportedHandler<Env>>{
 
 		if (url.pathname === '/api/inbox' && request.method === 'GET') {
 			return withAuth(inboxHandler)(request, env, ctx);
+		}
+
+		if (url.pathname === '/api/me' && request.method === 'GET') {
+			return withAuth(meHandler)(request, env, ctx);
 		}
 
 		if (url.pathname === '/api/articles' && request.method === 'GET') {
